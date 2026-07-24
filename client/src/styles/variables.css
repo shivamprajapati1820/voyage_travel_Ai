@@ -1,0 +1,11 @@
+/*
+ * Shared CSS custom properties for the Voyage design system.
+ * Imported from index.css where needed; kept separate so design
+ * tokens are easy to locate and tweak independently of Tailwind config.
+ */
+:root {
+  --voyage-primary: #009dff;
+  --voyage-accent: #ff7e12;
+  --voyage-radius-lg: 1rem;
+  --voyage-shadow-card: 0 10px 30px -12px rgba(10, 74, 125, 0.25);
+}
