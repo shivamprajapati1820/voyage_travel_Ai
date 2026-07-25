@@ -24,11 +24,26 @@ export const geocodeService = {
       },
     });
 
-    return data.map((place) => ({
+   return data.map((place) => ({
       id: place.place_id,
       displayName: place.display_name,
       lat: parseFloat(place.lat),
       lng: parseFloat(place.lon),
     }));
+  },
+
+  /**
+   * Turns coordinates into a human-readable city/state name.
+   * Used to detect the user's current city for nearby suggestions.
+   */
+  reverseGeocode: async (lat, lng) => {
+    const { data } = await nominatimClient.get("/reverse", {
+      params: { lat, lon: lng, format: "json" },
+    });
+    const address = data?.address || {};
+    const city =
+      address.city || address.town || address.village || address.county || "your area";
+    const state = address.state || "";
+    return { city, state, displayName: data?.display_name || city };
   },
 };

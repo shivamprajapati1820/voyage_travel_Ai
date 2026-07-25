@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { CalendarDays, Users, Wallet, Sparkles } from "lucide-react";
 import toast from "react-hot-toast";
 import DestinationAutocomplete from "../components/DestinationAutocomplete";
@@ -23,10 +23,28 @@ const initialForm = {
 
 const CreateTrip = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { addTripToState } = useTrips();
   const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
+
+  // Prefills the form when arriving from a "Plan with AI" destination card
+  // on the Home page (?destination=Goa, India&lat=..&lng=..).
+  useEffect(() => {
+    const destination = searchParams.get("destination");
+    const lat = parseFloat(searchParams.get("lat"));
+    const lng = parseFloat(searchParams.get("lng"));
+
+    if (destination) {
+      setForm((prev) => ({
+        ...prev,
+        destination,
+        location: !Number.isNaN(lat) && !Number.isNaN(lng) ? { lat, lng } : prev.location,
+      }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

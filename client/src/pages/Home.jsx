@@ -10,6 +10,7 @@ import {
   Backpack,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import NearbySuggestions from "../components/NearbySuggestions";
 
 const features = [
   {
@@ -103,6 +104,9 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+      {/* Smart Nearby Holiday Suggestions */}
+      <NearbySuggestions />
 
       {/* Features */}
       <section className="page-container py-20">

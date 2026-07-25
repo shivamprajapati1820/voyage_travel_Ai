@@ -16,6 +16,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import BudgetSwitcher from "../components/BudgetSwitcher";
 import { tripService } from "../services/tripService";
 import { geocodeService } from "../services/geocodeService";
 import MapView from "../components/MapView";
@@ -195,6 +196,9 @@ const TripDetails = () => {
       {ai && (
         <div className="mt-8 grid gap-6 lg:grid-cols-3">
           <div className="space-y-6 lg:col-span-2">
+            {/* Summary */}
+            {ai.budgetVariants && <BudgetSwitcher budgetVariants={ai.budgetVariants} />}
+
             {/* Summary */}
             <SectionCard icon={Landmark} title="Trip Summary">
               <p className="text-sm leading-relaxed text-slate-600">{ai.tripSummary}</p>

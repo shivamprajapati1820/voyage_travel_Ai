@@ -70,8 +70,57 @@ INSTRUCTIONS:
     "tips": "string"
   },
   "packingChecklist": ["string", "string"],
-  "travelTips": ["string", "string"]
+  "travelTips": ["string", "string"],
+  "budgetVariants": {
+    "cheapest": {
+      "label": "Cheapest",
+      "totalCost": "string - e.g. ₹7,999",
+      "hotel": "string - hostel/guesthouse name or type",
+      "restaurant": "string - street food / local eatery style",
+      "transportation": "string - e.g. local buses, shared autos",
+      "activities": "string - e.g. free beaches & public sightseeing",
+      "optionalExperiences": ["string"]
+    },
+    "budget": {
+      "label": "Budget",
+      "totalCost": "string",
+      "hotel": "string",
+      "restaurant": "string",
+      "transportation": "string",
+      "activities": "string",
+      "optionalExperiences": ["string"]
+    },
+    "standard": {
+      "label": "Standard",
+      "totalCost": "string",
+      "hotel": "string",
+      "restaurant": "string",
+      "transportation": "string",
+      "activities": "string",
+      "optionalExperiences": ["string"]
+    },
+    "premium": {
+      "label": "Premium",
+      "totalCost": "string",
+      "hotel": "string",
+      "restaurant": "string",
+      "transportation": "string",
+      "activities": "string",
+      "optionalExperiences": ["string"]
+    },
+    "luxury": {
+      "label": "Luxury",
+      "totalCost": "string - e.g. ₹45,999",
+      "hotel": "string - 5-star resort name or type",
+      "restaurant": "string - fine dining style",
+      "transportation": "string - e.g. private airport transfer",
+      "activities": "string - e.g. water sports, sunset cruise, spa",
+      "optionalExperiences": ["string"]
+    }
+  }
 }
+
+3b. "budgetVariants" gives the user 5 complete, self-contained versions of this same trip (same destination, same duration) at increasing spend levels, so they can compare without regenerating. Each tier's totalCost MUST scale sensibly with the number of travelers (${travelers}) and duration (${days} day(s)) - "cheapest" should be a realistic shoestring number, "luxury" a realistic high-end number for this destination.
 
 3. The "itinerary" array MUST contain exactly ${days} entries (one per day).
 4. Keep money values as human-readable strings (e.g. "₹8,000 - ₹10,000").
