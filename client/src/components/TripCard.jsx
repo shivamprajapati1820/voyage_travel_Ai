@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 import { MapPin, Calendar, Users, Trash2, IndianRupee } from "lucide-react";
 import { formatDate, tripDurationLabel } from "../utils/formatters";
+import { getLocationImage } from "../utils/imageHelpers";
+
 
 const statusStyles = {
   generated: "bg-emerald-100 text-emerald-700",
@@ -14,9 +16,7 @@ const TripCard = ({ trip, onDelete }) => {
       <div
         className="h-36 w-full bg-gradient-to-br from-primary-500 to-primary-700 bg-cover bg-center"
         style={{
-          backgroundImage: `url(https://source.unsplash.com/600x300/?${encodeURIComponent(
-            trip.destination
-          )},travel)`,
+          backgroundImage: `url(${getLocationImage(trip.destination, 600, 300)})`,
         }}
       >
         <div className="flex h-full w-full items-start justify-between bg-black/20 p-4">

@@ -30,3 +30,17 @@ export const getInitials = (name = "") => {
     .slice(0, 2)
     .toUpperCase();
 };
+
+export const extractPriceValue = (priceRange = "") => {
+  const match = String(priceRange).match(/[\d,]+(\.\d+)?/);
+  if (!match) return Infinity;
+  return parseFloat(match[0].replace(/,/g, ""));
+};
+
+export const sortByPrice = (items = [], priceKey = "priceRange", descending = false) => {
+  const sorted = [...items].sort((a, b) => {
+    const diff = extractPriceValue(a[priceKey]) - extractPriceValue(b[priceKey]);
+    return descending ? -diff : diff;
+  });
+  return sorted;
+};

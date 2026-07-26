@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Heart, MapPin, Clock, Star, Flame, Sparkles } from "lucide-react";
 import { weatherService } from "../services/weatherService";
 import { estimateTravelTime } from "../utils/geo";
+import { getLocationImage } from "../utils/imageHelpers";
 
 /**
  * Destination suggestion card used across the Home page's "Smart Nearby
@@ -41,9 +42,7 @@ const DestinationCard = ({ destination, distanceKm, isSaved, onToggleSave }) => 
       <div
         className="relative h-40 w-full bg-gradient-to-br from-primary-500 to-primary-700 bg-cover bg-center"
         style={{
-          backgroundImage: `url(https://source.unsplash.com/500x300/?${encodeURIComponent(
-            destination.name
-          )},travel)`,
+          backgroundImage: `url(${getLocationImage(destination.name, 500, 300)})`,
         }}
       >
         <div className="flex h-full w-full items-start justify-between bg-black/10 p-3">

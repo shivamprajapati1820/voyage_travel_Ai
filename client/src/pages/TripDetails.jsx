@@ -21,8 +21,8 @@ import { tripService } from "../services/tripService";
 import { geocodeService } from "../services/geocodeService";
 import MapView from "../components/MapView";
 import LoadingSpinner from "../components/LoadingSpinner";
-import { formatDate, tripDurationLabel } from "../utils/formatters";
-
+import { formatDate, tripDurationLabel, sortByPrice } from "../utils/formatters";
+import { getLocationImage } from "../utils/imageHelpers";
 const SectionCard = ({ icon: Icon, title, children }) => (
   <div className="card">
     <div className="mb-4 flex items-center gap-2">
@@ -163,9 +163,7 @@ const TripDetails = () => {
       <div
         className="relative overflow-hidden rounded-2xl bg-cover bg-center p-8 text-white"
         style={{
-          backgroundImage: `linear-gradient(rgba(6,20,40,0.6), rgba(6,20,40,0.75)), url(https://source.unsplash.com/1200x400/?${encodeURIComponent(
-            trip.destination
-          )},travel)`,
+          backgroundImage: `linear-gradient(rgba(6,20,40,0.6), rgba(6,20,40,0.75)), url(${getLocationImage(trip.destination, 1200, 400)})`,
         }}
       >
         <h1 className="font-display text-3xl font-bold">{trip.destination}</h1>
