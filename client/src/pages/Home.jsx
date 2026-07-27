@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import NearbySuggestions from "../components/NearbySuggestions";
+import RoutePlanner from "../components/RoutePlanner";
 
 const features = [
   {
@@ -66,9 +67,6 @@ const Home = () => {
           }}
         />
         <div className="page-container relative flex min-h-[600px] flex-col items-start justify-center gap-6 py-24 text-white">
-          <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-sm font-medium backdrop-blur">
-            <Sparkles size={16} className="text-accent-400" /> Powered by Google Gemini AI
-          </span>
           <h1 className="max-w-2xl font-display text-4xl font-bold leading-tight md:text-6xl">
             Plan your perfect trip <span className="text-accent-400">in minutes</span>, not hours.
           </h1>
@@ -104,6 +102,9 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+     {/* Travel Route & Schedule Planner */}
+      <RoutePlanner />
 
       {/* Smart Nearby Holiday Suggestions */}
       <NearbySuggestions />

@@ -7,7 +7,13 @@ import usePlaceAutocomplete from "../hooks/usePlaceAutocomplete";
  * OpenStreetMap Nominatim. Calls onSelect({ displayName, lat, lng })
  * when the user picks a suggestion.
  */
-const DestinationAutocomplete = ({ value, onChange, onSelect, error }) => {
+const DestinationAutocomplete = ({
+  value,
+  onChange,
+  onSelect,
+  error,
+  placeholder = "Where do you want to go? e.g. Goa, India",
+}) => {
   const [open, setOpen] = useState(false);
   const containerRef = useRef(null);
   const { suggestions, loading } = usePlaceAutocomplete(value);
@@ -39,7 +45,7 @@ const DestinationAutocomplete = ({ value, onChange, onSelect, error }) => {
             setOpen(true);
           }}
           onFocus={() => setOpen(true)}
-          placeholder="Where do you want to go? e.g. Goa, India"
+          placeholder={placeholder}
           className={`input-field pl-10 ${error ? "border-red-400" : ""}`}
           autoComplete="off"
         />

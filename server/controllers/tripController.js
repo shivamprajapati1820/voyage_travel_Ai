@@ -18,8 +18,9 @@ const createTrip = asyncHandler(async (req, res) => {
     endDate,
     travelType,
     interests,
+    startingFrom,
+    travelMode,
   } = req.body;
-
   if (new Date(startDate) > new Date(endDate)) {
     res.status(400);
     throw new Error("Start date cannot be after end date");
@@ -36,13 +37,15 @@ const createTrip = asyncHandler(async (req, res) => {
     endDate,
     travelType,
     interests,
+    startingFrom,
+    travelMode,
     status: "draft",
   });
 
   // 2. Attempt AI generation. If it fails, the trip still exists
   //    (status: failed) and the user can retry from the trip details page.
   try {
-    const aiResponse = await generateTripPlan({
+   const aiResponse = await generateTripPlan({
       destination,
       startDate,
       endDate,
@@ -50,6 +53,8 @@ const createTrip = asyncHandler(async (req, res) => {
       travelers,
       travelType,
       interests,
+      startingFrom,
+      travelMode,
     });
 
     trip.aiResponse = aiResponse;
@@ -140,6 +145,8 @@ const regenerateTrip = asyncHandler(async (req, res) => {
     travelers: trip.travelers,
     travelType: trip.travelType,
     interests: trip.interests,
+    startingFrom: trip.startingFrom,
+    travelMode: trip.travelMode,
   });
 
   trip.aiResponse = aiResponse;

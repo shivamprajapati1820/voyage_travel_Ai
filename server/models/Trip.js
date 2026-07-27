@@ -43,6 +43,19 @@ const tripSchema = new mongoose.Schema(
       type: [String],
       default: [],
     },
+    // Optional - set when the trip is created from the Home page's
+    // Travel Route & Schedule Planner, so the AI can factor in the
+    // journey to the destination, not just the destination itself.
+    startingFrom: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    travelMode: {
+      type: String,
+      trim: true,
+      default: "",
+    },
     // Raw + structured AI response from Gemini
     aiResponse: {
       type: mongoose.Schema.Types.Mixed,

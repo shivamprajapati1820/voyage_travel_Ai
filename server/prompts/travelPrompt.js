@@ -11,18 +11,31 @@ const buildTravelPrompt = ({
   travelers,
   travelType,
   interests,
+  startingFrom,
+  travelMode,
 }) => {
   const days =
     Math.ceil(
       (new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)
     ) + 1;
 
+  // Only included when the trip was created via the Home page's Travel
+  // Route & Schedule Planner, so the "gettingThere" transportation section
+  // can reflect the journey the user already planned instead of a generic
+  // guess.
+  const journeyLine =
+    startingFrom || travelMode
+      ? `- Traveling From: ${startingFrom || "Not specified"}${
+          travelMode ? ` via ${travelMode}` : ""
+        } (use this for the "gettingThere" field in transportation instead of a generic assumption)\n`
+      : "";
+
   return `
 You are Voyage AI, an expert travel planning assistant. Generate a detailed, realistic, and practical travel plan based on the trip details below.
 
 TRIP DETAILS:
 - Destination: ${destination}
-- Start Date: ${startDate}
+${journeyLine}- Start Date: ${startDate}
 - End Date: ${endDate}
 - Duration: ${days} day(s)
 - Budget: ${budget} (total, in INR unless destination clearly implies another currency)

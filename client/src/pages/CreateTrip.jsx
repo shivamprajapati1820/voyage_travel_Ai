@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { CalendarDays, Users, Wallet, Sparkles } from "lucide-react";
+import { CalendarDays, Users, Wallet, Sparkles, Route } from "lucide-react";
 import toast from "react-hot-toast";
 import DestinationAutocomplete from "../components/DestinationAutocomplete";
 import MapView from "../components/MapView";
@@ -19,6 +19,8 @@ const initialForm = {
   travelers: 1,
   travelType: "Solo",
   interests: [],
+  startingFrom: "", // optional - set when arriving from the Route Planner
+  travelMode: "", // optional - e.g. "Car - 4 hr 30 min"
 };
 
 const CreateTrip = () => {
@@ -35,12 +37,17 @@ const CreateTrip = () => {
     const destination = searchParams.get("destination");
     const lat = parseFloat(searchParams.get("lat"));
     const lng = parseFloat(searchParams.get("lng"));
+    const from = searchParams.get("from");
+    const mode = searchParams.get("mode");
+    const duration = searchParams.get("duration");
 
     if (destination) {
       setForm((prev) => ({
         ...prev,
         destination,
         location: !Number.isNaN(lat) && !Number.isNaN(lng) ? { lat, lng } : prev.location,
+        startingFrom: from || prev.startingFrom,
+        travelMode: mode ? `${mode}${duration ? ` - approx. ${duration}` : ""}` : prev.travelMode,
       }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -91,6 +98,8 @@ const CreateTrip = () => {
         travelers: Number(form.travelers),
         travelType: form.travelType,
         interests: form.interests,
+        startingFrom: form.startingFrom || undefined,
+        travelMode: form.travelMode || undefined,
       });
 
       addTripToState(trip);
@@ -133,6 +142,17 @@ const CreateTrip = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="card space-y-6">
+          {(form.startingFrom || form.travelMode) && (
+            <div className="flex items-start gap-2 rounded-xl bg-primary-50 p-3 text-sm text-primary-700">
+              <Route size={16} className="mt-0.5 shrink-0" />
+              <p>
+                {form.startingFrom && <>Traveling from <strong>{form.startingFrom}</strong></>}
+                {form.travelMode && <> via <strong>{form.travelMode}</strong></>} — these details will be
+                included in your AI itinerary.
+              </p>
+            </div>
+          )}
+
           {/* Destination */}
           <div>
             <label className="mb-1 block text-sm font-medium text-slate-700">Destination</label>
