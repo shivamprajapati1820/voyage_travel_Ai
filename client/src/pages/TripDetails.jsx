@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import BudgetSwitcher from "../components/BudgetSwitcher";
+import SmartTimeGuide from "../components/SmartTimeGuide";
 import { tripService } from "../services/tripService";
 import { geocodeService } from "../services/geocodeService";
 import MapView from "../components/MapView";
@@ -183,6 +184,11 @@ const TripDetails = () => {
             <Trash2 size={16} /> Delete Trip
           </button>
         </div>
+      </div>
+
+      {/* Smart Time Guide - premium feature, generated on demand */}
+      <div className="mt-8">
+        <SmartTimeGuide trip={trip} />
       </div>
 
       {trip.status === "failed" && (
