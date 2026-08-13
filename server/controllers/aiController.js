@@ -39,36 +39,63 @@ const generatePlan = asyncHandler(async (req, res) => {
 });
 
 /**
- * Condenses an existing trip's Day 1 activities + attraction names into a
- * short text block for the time guide prompt, so Gemini can reference real
- * plan details without us re-sending (or it re-generating) the full plan.
+ * Condenses an existing trip's FULL day-by-day itinerary + hotel/restaurant/
+ * attraction names into a text block for the time guide prompt, so Gemini
+ * can reference real plan details across every day instead of re-inventing
+ * (or only knowing about) a single day.
  */
-const summarizeExistingPlan = (aiResponse) => {
+const summarizeFullPlan = (aiResponse) => {
   if (!aiResponse) return "";
   const parts = [];
 
-  const day1 = aiResponse.itinerary?.[0];
-  if (day1) {
-    const activityLines = (day1.activities || [])
+  (aiResponse.itinerary || []).forEach((day) => {
+    const activityLines = (day.activities || [])
       .map((a) => `${a.time}: ${a.activity}`)
       .join("; ");
-    parts.push(`Day 1 plan (${day1.title || ""}): ${activityLines}`);
-  }
+    let line = `Day ${day.day}${day.title ? ` (${day.title})` : ""}: ${activityLines}`;
+    if (day.hotelStay) line += ` | Hotel: ${day.hotelStay}`;
+    parts.push(line);
+  });
 
   const attractionNames = (aiResponse.attractions || []).map((a) => a.name).join(", ");
   if (attractionNames) parts.push(`Key attractions: ${attractionNames}`);
 
-  const hotelName = aiResponse.hotels?.[0]?.name;
-  if (hotelName) parts.push(`Suggested hotel: ${hotelName}`);
+  const hotelNames = (aiResponse.hotels || []).map((h) => h.name).join(", ");
+  if (hotelNames) parts.push(`Available hotels: ${hotelNames}`);
+
+  const restaurantNames = (aiResponse.restaurants || []).map((r) => r.name).join(", ");
+  if (restaurantNames) parts.push(`Available restaurants: ${restaurantNames}`);
 
   return parts.join("\n");
 };
 
 /**
- * @desc    Generate the "Smart Time Guide" - hour-by-hour schedule from the
- *          user's real current location/time through arrival at their trip's
- *          destination. Reuses the trip's already-generated itinerary rather
- *          than creating a new one.
+ * Builds a labeled list of calendar dates for the trip, starting from the
+ * chosen departure date, so Gemini doesn't have to compute date math itself.
+ */
+const buildDayDates = (startDateStr, totalDays) => {
+  const start = new Date(startDateStr);
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    weekday: "long",
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+  const days = [];
+  for (let i = 0; i < totalDays; i += 1) {
+    const d = new Date(start);
+    d.setDate(d.getDate() + i);
+    days.push({ dayNumber: i + 1, label: formatter.format(d) });
+  }
+  return days;
+};
+
+/**
+ * @desc    Generate the "Smart Time Guide" - a full, hour-by-hour schedule
+ *          for the whole trip, starting from the user's chosen departure
+ *          location/date/transport mode and ending with their return home.
+ *          Reuses the trip's already-generated itinerary rather than
+ *          creating a new one.
  * @route   POST /api/ai/time-guide
  * @access  Private
  */
@@ -79,7 +106,8 @@ const generateTimeGuide = asyncHandler(async (req, res) => {
     currentDateTime,
     distanceKm,
     travelDurationLabel,
-    recommendedTransport,
+    transportMode,
+    travelDate,
   } = req.body;
 
   if (!tripId || !currentCity || !currentDateTime) {
@@ -93,6 +121,10 @@ const generateTimeGuide = asyncHandler(async (req, res) => {
     throw new Error("Trip not found");
   }
 
+  const totalDays =
+    Math.ceil((new Date(trip.endDate) - new Date(trip.startDate)) / (1000 * 60 * 60 * 24)) + 1;
+  const dayDates = buildDayDates(travelDate || new Date().toISOString(), totalDays);
+
   const timeGuide = await generateSmartTimeGuide({
     currentCity,
     currentDateTime,
@@ -102,8 +134,9 @@ const generateTimeGuide = asyncHandler(async (req, res) => {
     travelType: trip.travelType,
     distanceKm,
     travelDurationLabel,
-    recommendedTransport,
-    existingItinerary: summarizeExistingPlan(trip.aiResponse),
+    transportMode: transportMode || "Car",
+    dayDates,
+    existingItinerary: summarizeFullPlan(trip.aiResponse),
   });
 
   trip.aiResponse = { ...trip.aiResponse, timeGuide };

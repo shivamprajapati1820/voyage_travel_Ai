@@ -1,9 +1,8 @@
 /**
- * Builds the prompt for the "Smart Time Guide" feature. Unlike
- * travelPrompt.js (which invents a whole trip), this prompt gives Gemini
- * the trip's EXISTING itinerary/attractions and asks it to sequence a
- * realistic hour-by-hour schedule starting from the user's real current
- * location and real current time - no itinerary regeneration happens here.
+ * Builds the prompt for the "Smart Time Guide" feature. Given the trip's
+ * EXISTING itinerary, the user's departure city/date/time, and their chosen
+ * transport mode, this asks Gemini to sequence a full, realistic hour-by-hour
+ * schedule covering departure -> every day of the trip -> return home.
  */
 const buildTimeGuidePrompt = ({
   currentCity,
@@ -14,48 +13,62 @@ const buildTimeGuidePrompt = ({
   travelType,
   distanceKm,
   travelDurationLabel,
-  recommendedTransport,
+  transportMode,
+  dayDates = [],
   existingItinerary,
 }) => {
   const distanceLine =
     distanceKm != null
-      ? `- Distance to Destination: ~${Math.round(distanceKm)} km\n- Estimated Travel Duration: ${travelDurationLabel}\n- Recommended Transport: ${recommendedTransport}\n`
+      ? `- Distance to Destination: ~${Math.round(distanceKm)} km\n- Estimated Travel Duration (${transportMode}): ${travelDurationLabel}\n`
       : "- Distance/travel duration to destination could not be calculated (no route found) - use your best realistic estimate.\n";
 
-  return `
-You are Voyage AI's Smart Time Guide generator. Build a realistic, hour-by-hour schedule for a traveler, starting from their CURRENT real-world location and CURRENT real-world time, all the way through arrival, check-in, and the day's activities at "${destination}".
+  const dayDatesBlock = dayDates.map((d) => `Day ${d.dayNumber}: ${d.label}`).join("\n");
 
-CURRENT SITUATION:
+  return `
+You are Voyage AI's Smart Time Guide generator. Build a COMPLETE, realistic, hour-by-hour schedule for a traveler's ENTIRE trip - starting with departure from their current location and ending with their return home after the last day.
+
+DEPARTURE DETAILS:
 - Current Location: ${currentCity}
-- Current Date & Time: ${currentDateTime}
+- Departure Date & Time: ${currentDateTime}
+- Chosen Transport Mode: ${transportMode} (use this exact mode for BOTH the outbound and return journey - do not substitute another mode)
 - Destination: ${destination}
 ${distanceLine}- Budget: ${budget}
 - Number of Travelers: ${travelers}
 - Travel Style: ${travelType}
 
-EXISTING TRIP PLAN (already generated - do NOT recreate this, just weave relevant pieces into the timeline):
+TRIP CALENDAR (the trip spans these exact days - use these labels verbatim for "dayLabel"):
+${dayDatesBlock}
+
+EXISTING TRIP PLAN (already generated - do NOT recreate this, reuse the REAL names from it for each day):
 ${existingItinerary || "No existing itinerary details available - use general best practices for this destination."}
 
 INSTRUCTIONS:
 1. Respond with STRICT, VALID JSON ONLY. No markdown, no code fences, no commentary before or after.
-2. Build a realistic sequence of timeline steps starting from "Current Location" / "Current Time" and continuing through: departure, station/airport arrival (if relevant to the recommended transport), vehicle departure, arrival at destination, hotel check-in, meals (breakfast/lunch/dinner as time-appropriate), sightseeing with the best visiting time for each attraction, hotel return, and rest time.
-3. CRITICAL - respect the current time: if it is already late in the day (e.g. evening/night) such that check-in, dinner, and rest are the only realistic remaining steps for today, do exactly that - do NOT cram sightseeing into tonight. Instead, intelligently move sightseeing/attraction visits to "Day 2" (or the next suitable day) and clearly explain WHY in that step's "adjustmentNote" field (e.g. "Moved to Day 2 because arrival is late evening").
-4. Follow this exact JSON schema:
+2. Build the FULL journey, in order:
+   a. Departure from "${currentCity}" at the given departure date/time via ${transportMode}.
+   b. Transit step(s) (station/airport arrival, boarding, journey) appropriate for ${transportMode}.
+   c. Arrival at "${destination}", hotel check-in.
+   d. For EVERY day listed in the TRIP CALENDAR above, a full day schedule: breakfast, 2-3 sightseeing stops with real attraction names from the existing trip plan, lunch at a real restaurant, more sightseeing/shopping, dinner, and rest - matching that day's plan from the EXISTING TRIP PLAN above as closely as possible.
+   e. On the FINAL day in the TRIP CALENDAR, after the day's activities wrap up, include: hotel checkout, departure from "${destination}" via ${transportMode}, transit, and arrival back at "${currentCity}".
+3. NAME REAL PLACES, not generic labels: "checkin"/"rest" steps MUST name the specific hotel from the existing trip plan; "breakfast"/"lunch"/"dinner" steps MUST name a specific restaurant from the existing trip plan; "sightseeing" steps MUST name a specific attraction from the existing trip plan. Put that specific name in the "place" field for that step - never leave a meal, stay, or sightseeing step without a real named place if one is available.
+4. CRITICAL - respect the departure time: if the departure is already late in the day such that arrival/check-in/dinner/rest are the only realistic steps for Day 1, do exactly that - do NOT cram sightseeing into arrival night. Move that day's sightseeing to the next day and clearly explain WHY in that step's "adjustmentNote" field.
+5. Follow this exact JSON schema:
 
 {
   "summary": {
     "currentLocation": "string",
-    "currentTime": "string - human readable, e.g. '3:45 PM, 28 July 2026'",
+    "currentTime": "string - the departure date & time, human readable",
     "destination": "string",
-    "transport": "string - e.g. 'Car' or 'Train'",
+    "transport": "string - the chosen transport mode",
     "distance": "string - e.g. '450 km'",
     "travelDuration": "string - e.g. '8 hr 30 min'"
   },
   "timeline": [
     {
-      "time": "string - e.g. '3:45 PM' or 'Day 2, 8:00 AM'",
-      "dayLabel": "string - e.g. 'Today' or 'Day 2'",
+      "time": "string - e.g. '8:00 AM'",
+      "dayLabel": "string - use the exact labels from TRIP CALENDAR above, plus 'Departure' and 'Return Journey' where relevant",
       "type": "one of: current | departure | transit | arrival | checkin | breakfast | lunch | dinner | sightseeing | rest | other",
+      "place": "string or null - the SPECIFIC hotel/restaurant/attraction name for this step. Null only for steps with no specific named place, like departure or transit.",
       "title": "string - short step title",
       "description": "string - 1-2 sentences of detail",
       "adjustmentNote": "string or null - only set if this step was moved from its originally expected time/day, explaining why"
@@ -64,8 +77,9 @@ INSTRUCTIONS:
   "notes": ["string - any general notes about adjustments or assumptions made"]
 }
 
-5. Keep the timeline realistic and specific to "${destination}" - reference real attraction names from the existing trip plan where possible.
-6. Do not include any text outside the JSON object.
+6. The "timeline" array MUST cover the departure, every day in the TRIP CALENDAR, and the return journey - this is a full end-to-end trip schedule, not just a single day.
+7. Keep everything realistic and specific to "${destination}" - reference real attraction, hotel, and restaurant names from the existing trip plan wherever possible.
+8. Do not include any text outside the JSON object.
 `.trim();
 };
 
